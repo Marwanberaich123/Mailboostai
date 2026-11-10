@@ -1,0 +1,204 @@
+{
+  "entities": {
+    "userProfile": {
+      "title": "UserProfile",
+      "description": "User profile, account tier, and global sending defaults",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "starter", "pro", "business"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "email", "plan"]
+    },
+    "emailAccount": {
+      "title": "EmailAccount",
+      "description": "Connected sending account with provider credentials",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "provider": { "type": "string", "enum": ["gmail", "outlook", "yahoo", "zoho", "smtp"] },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "status": { "type": "string", "enum": ["connected", "reconnect_required", "rate_limited", "disconnected"] },
+        "host": { "type": "string" },
+        "port": { "type": "number" },
+        "encryption": { "type": "string", "enum": ["tls", "ssl", "none"] },
+        "username": { "type": "string" },
+        "sentCount": { "type": "number" },
+        "dailyLimit": { "type": "number" },
+        "lastCheckedAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "provider", "email", "status"]
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Recipient address with personalization metadata and consent status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "firstName": { "type": "string" },
+        "lastName": { "type": "string" },
+        "company": { "type": "string" },
+        "listIds": { "type": "array" },
+        "status": { "type": "string", "enum": ["active", "suppressed", "unsubscribed", "bounced"] },
+        "consentSource": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "email", "status"]
+    },
+    "contactList": {
+      "title": "ContactList",
+      "description": "Named segment or group of contacts for targeted campaigns",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "contactCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name"]
+    },
+    "campaignTemplate": {
+      "title": "CampaignTemplate",
+      "description": "Reusable email template with variables and preview metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "htmlContent": { "type": "string" },
+        "textContent": { "type": "string" },
+        "variables": { "type": "array" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "subject", "htmlContent"]
+    },
+    "campaign": {
+      "title": "Campaign",
+      "description": "Email campaign entity with scheduling, multi-template variations, and delivery metrics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "scheduled", "in_progress", "paused", "completed", "cancelled"] },
+        "senderAccountIds": { "type": "array" },
+        "targetListIds": { "type": "array" },
+        "templateIds": { "type": "array" },
+        "recipientCount": { "type": "number" },
+        "sentCount": { "type": "number" },
+        "acceptedCount": { "type": "number" },
+        "bouncedCount": { "type": "number" },
+        "failedCount": { "type": "number" },
+        "throttleIntervalSeconds": { "type": "number" },
+        "scheduledAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "status"]
+    },
+    "campaignJob": {
+      "title": "CampaignJob",
+      "description": "Individual dispatch job record for an email recipient",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "recipientEmail": { "type": "string" },
+        "recipientName": { "type": "string" },
+        "senderAccountId": { "type": "string" },
+        "templateId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "scheduled", "processing", "accepted", "delivered", "failed", "bounced", "suppressed"] },
+        "errorLog": { "type": "string" },
+        "retryCount": { "type": "number" },
+        "sentAt": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "campaignId", "recipientEmail", "status"]
+    },
+    "suppression": {
+      "title": "Suppression",
+      "description": "Suppressed email record to prevent unauthorized or bounced sending",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "reason": { "type": "string", "enum": ["unsubscribe", "hard_bounce", "spam_complaint", "manual_block"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "email", "reason"]
+    },
+    "reply": {
+      "title": "Reply",
+      "description": "Incoming reply received on a connected sender account",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "accountId": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "fromEmail": { "type": "string" },
+        "fromName": { "type": "string" },
+        "subject": { "type": "string" },
+        "snippet": { "type": "string" },
+        "body": { "type": "string" },
+        "receivedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "fromEmail", "subject", "receivedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "userProfile",
+      "description": "User account profile and plan tier"
+    },
+    "/users/{userId}/email_accounts/{accountId}": {
+      "schema": "emailAccount",
+      "description": "Connected email accounts owned by user"
+    },
+    "/users/{userId}/contacts/{contactId}": {
+      "schema": "contact",
+      "description": "Contacts and consent records owned by user"
+    },
+    "/users/{userId}/contact_lists/{listId}": {
+      "schema": "contactList",
+      "description": "Contact lists and segments owned by user"
+    },
+    "/users/{userId}/templates/{templateId}": {
+      "schema": "campaignTemplate",
+      "description": "Email templates owned by user"
+    },
+    "/users/{userId}/campaigns/{campaignId}": {
+      "schema": "campaign",
+      "description": "Campaign entities owned by user"
+    },
+    "/users/{userId}/campaigns/{campaignId}/jobs/{jobId}": {
+      "schema": "campaignJob",
+      "description": "Dispatch jobs for a specific campaign"
+    },
+    "/users/{userId}/suppressions/{suppressionId}": {
+      "schema": "suppression",
+      "description": "Suppressed emails owned by user"
+    },
+    "/users/{userId}/replies/{replyId}": {
+      "schema": "reply",
+      "description": "Incoming email replies received for user"
+    }
+  }
+}

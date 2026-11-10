@@ -1,0 +1,6 @@
+{
+  "name": "PostReach - Unified Outbound & Inbox Platform",
+  "description": "Production-grade multi-provider email SaaS platform to manage accounts across Gmail, Outlook, Yahoo, Zoho, and SMTP, execute personalized campaigns, and monitor deliverability.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

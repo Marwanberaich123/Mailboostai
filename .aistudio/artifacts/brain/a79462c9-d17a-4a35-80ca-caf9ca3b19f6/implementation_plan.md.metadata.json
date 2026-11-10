@@ -1,0 +1,6 @@
+{
+  "summary":  "Comprehensive architectural and design plan for PostReach, a unified multi-provider email SaaS platform supporting Gmail, Outlook, Yahoo, Zoho, and Custom SMTP with Firebase persistence, real-time job queues, campaign wizards, deliverability analytics, and compliant subscriber management.",
+  "updatedAt":  "2026-11-10T21:34:15.497951981Z",
+  "requestFeedback":  true,
+  "userFacing":  true
+}

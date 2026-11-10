@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Bootstrapped Connection Verification Doc
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // User Profile
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidId(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false;
+
+      // Email Accounts
+      match /email_accounts/{accountId} {
+        allow read, write: if isOwner(userId) && isValidId(accountId);
+      }
+
+      // Contacts
+      match /contacts/{contactId} {
+        allow read, write: if isOwner(userId) && isValidId(contactId);
+      }
+
+      // Contact Lists
+      match /contact_lists/{listId} {
+        allow read, write: if isOwner(userId) && isValidId(listId);
+      }
+
+      // Templates
+      match /templates/{templateId} {
+        allow read, write: if isOwner(userId) && isValidId(templateId);
+      }
+
+      // Campaigns
+      match /campaigns/{campaignId} {
+        allow read, write: if isOwner(userId) && isValidId(campaignId);
+
+        // Campaign Jobs
+        match /jobs/{jobId} {
+          allow read, write: if isOwner(userId) && isValidId(jobId);
+        }
+      }
+
+      // Suppressions
+      match /suppressions/{suppressionId} {
+        allow read, write: if isOwner(userId) && isValidId(suppressionId);
+      }
+
+      // Replies
+      match /replies/{replyId} {
+        allow read, write: if isOwner(userId) && isValidId(replyId);
+      }
+    }
+  }
+}
