@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 import { Shell } from './components/layout/Shell';
 import { AuthModal } from './components/auth/AuthModal';
+import { GoogleLoginScreen } from './components/auth/GoogleLoginScreen';
 import { PlatformLockScreen } from './components/security/PlatformLockScreen';
 import { NavigationTab } from './types';
 import { testConnection } from './lib/firebase';
@@ -30,7 +31,7 @@ function AppContent() {
 
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const { user, isDemoMode, loading } = useAuth();
+  const { user, loading } = useAuth();
 
   // فحص الاتصال بقاعدة البيانات عند بدء التشغيل
   useEffect(() => {
@@ -93,6 +94,11 @@ function AppContent() {
         </div>
       </div>
     );
+  }
+
+  // إذا لم يكن المستخدم مسجلاً دخوله بحساب Google، إظهار شاشة الدخول عبر Google فقط
+  if (!user) {
+    return <GoogleLoginScreen onLockPlatform={handleLockPlatform} />;
   }
 
   return (

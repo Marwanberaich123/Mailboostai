@@ -64,10 +64,9 @@ interface DataContextType {
   sendReply: (replyId: string, replyText: string) => Promise<void>;
 }
 
-// قوالب بداية جاهزة باللغة العربية
 const STARTER_TEMPLATES: CampaignTemplate[] = [
   {
-    id: 'tpl_ar_1',
+    id: 'tpl_ar_starter',
     userId: 'default',
     title: 'رسالة تواصل أولى - قالب احترافي',
     subject: 'استفسار بخصوص تعاون مع {{company}}',
@@ -84,149 +83,201 @@ const STARTER_TEMPLATES: CampaignTemplate[] = [
 const DataContext = createContext<DataContextType | null>(null);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
-  const { user, isDemoMode } = useAuth();
+  const { user } = useAuth();
 
-  // كافة الإحصائيات والحسابات والحملات تبدأ من الصفر تماماً كما طلب المستخدم
-  const [accounts, setAccounts] = useState<EmailAccount[]>(() => {
-    const saved = localStorage.getItem('pr_accounts');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [contacts, setContacts] = useState<Contact[]>(() => {
-    const saved = localStorage.getItem('pr_contacts');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [contactLists, setContactLists] = useState<ContactList[]>(() => {
-    const saved = localStorage.getItem('pr_lists');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [templates, setTemplates] = useState<CampaignTemplate[]>(() => {
-    const saved = localStorage.getItem('pr_templates');
-    return saved ? JSON.parse(saved) : STARTER_TEMPLATES;
-  });
-  const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
-    const saved = localStorage.getItem('pr_campaigns');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [accounts, setAccounts] = useState<EmailAccount[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contactLists, setContactLists] = useState<ContactList[]>([]);
+  const [templates, setTemplates] = useState<CampaignTemplate[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [jobs, setJobs] = useState<CampaignJob[]>([]);
-  const [suppressions, setSuppressions] = useState<Suppression[]>(() => {
-    const saved = localStorage.getItem('pr_suppressions');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [replies, setReplies] = useState<Reply[]>(() => {
-    const saved = localStorage.getItem('pr_replies');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [suppressions, setSuppressions] = useState<Suppression[]>([]);
+  const [replies, setReplies] = useState<Reply[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // حفظ محلي لضمان بقاء البيانات عند التحديث
+  // Sync with Firestore whenever authenticated user changes
   useEffect(() => {
-    localStorage.setItem('pr_accounts', JSON.stringify(accounts));
-  }, [accounts]);
-  useEffect(() => {
-    localStorage.setItem('pr_contacts', JSON.stringify(contacts));
-  }, [contacts]);
-  useEffect(() => {
-    localStorage.setItem('pr_lists', JSON.stringify(contactLists));
-  }, [contactLists]);
-  useEffect(() => {
-    localStorage.setItem('pr_templates', JSON.stringify(templates));
-  }, [templates]);
-  useEffect(() => {
-    localStorage.setItem('pr_campaigns', JSON.stringify(campaigns));
-  }, [campaigns]);
-  useEffect(() => {
-    localStorage.setItem('pr_suppressions', JSON.stringify(suppressions));
-  }, [suppressions]);
-  useEffect(() => {
-    localStorage.setItem('pr_replies', JSON.stringify(replies));
-  }, [replies]);
+    if (!user) {
+      // Clear data when no user is signed in
+      setAccounts([]);
+      setContacts([]);
+      setContactLists([]);
+      setTemplates([]);
+      setCampaigns([]);
+      setSuppressions([]);
+      setReplies([]);
+      setJobs([]);
+      return;
+    }
 
-  // مزامنة Firestore عندما يكون المستخدم مسجلاً دخول حقيقي
-  useEffect(() => {
-    if (!user || isDemoMode) return;
-
-    setLoading(true);
     const userId = user.uid;
+    setLoading(true);
 
-    const unsubAccounts = onSnapshot(collection(db, 'users', userId, 'email_accounts'), (snap) => {
-      const docs = snap.docs.map(d => ({ ...d.data(), id: d.id } as EmailAccount));
-      if (docs.length > 0) setAccounts(docs);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/email_accounts`));
+    // Load initial user cache if available
+    try {
+      const cachedAcc = localStorage.getItem(`pr_${userId}_accounts`);
+      if (cachedAcc) setAccounts(JSON.parse(cachedAcc));
+      const cachedContacts = localStorage.getItem(`pr_${userId}_contacts`);
+      if (cachedContacts) setContacts(JSON.parse(cachedContacts));
+      const cachedLists = localStorage.getItem(`pr_${userId}_lists`);
+      if (cachedLists) setContactLists(JSON.parse(cachedLists));
+      const cachedTemplates = localStorage.getItem(`pr_${userId}_templates`);
+      if (cachedTemplates) setTemplates(JSON.parse(cachedTemplates));
+      const cachedCampaigns = localStorage.getItem(`pr_${userId}_campaigns`);
+      if (cachedCampaigns) setCampaigns(JSON.parse(cachedCampaigns));
+      const cachedSuppressions = localStorage.getItem(`pr_${userId}_suppressions`);
+      if (cachedSuppressions) setSuppressions(JSON.parse(cachedSuppressions));
+    } catch (e) {
+      console.warn('Could not read user cache:', e);
+    }
 
-    const unsubContacts = onSnapshot(collection(db, 'users', userId, 'contacts'), (snap) => {
-      const docs = snap.docs.map(d => ({ ...d.data(), id: d.id } as Contact));
-      if (docs.length > 0) setContacts(docs);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/contacts`));
+    // 1. Listen to Email Accounts
+    const unsubAccounts = onSnapshot(
+      collection(db, 'users', userId, 'email_accounts'),
+      (snap) => {
+        const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id } as EmailAccount));
+        setAccounts(docs);
+        localStorage.setItem(`pr_${userId}_accounts`, JSON.stringify(docs));
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/email_accounts`)
+    );
 
-    const unsubLists = onSnapshot(collection(db, 'users', userId, 'contact_lists'), (snap) => {
-      const docs = snap.docs.map(d => ({ ...d.data(), id: d.id } as ContactList));
-      if (docs.length > 0) setContactLists(docs);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/contact_lists`));
+    // 2. Listen to Contacts
+    const unsubContacts = onSnapshot(
+      collection(db, 'users', userId, 'contacts'),
+      (snap) => {
+        const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id } as Contact));
+        setContacts(docs);
+        localStorage.setItem(`pr_${userId}_contacts`, JSON.stringify(docs));
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/contacts`)
+    );
 
-    const unsubCampaigns = onSnapshot(collection(db, 'users', userId, 'campaigns'), (snap) => {
-      const docs = snap.docs.map(d => ({ ...d.data(), id: d.id } as Campaign));
-      if (docs.length > 0) setCampaigns(docs);
-      setLoading(false);
-    }, (err) => {
-      setLoading(false);
-      handleFirestoreError(err, OperationType.LIST, `users/${userId}/campaigns`);
-    });
+    // 3. Listen to Contact Lists
+    const unsubLists = onSnapshot(
+      collection(db, 'users', userId, 'contact_lists'),
+      (snap) => {
+        const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id } as ContactList));
+        setContactLists(docs);
+        localStorage.setItem(`pr_${userId}_lists`, JSON.stringify(docs));
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/contact_lists`)
+    );
+
+    // 4. Listen to Templates
+    const unsubTemplates = onSnapshot(
+      collection(db, 'users', userId, 'templates'),
+      async (snap) => {
+        const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id } as CampaignTemplate));
+        if (docs.length === 0) {
+          // Auto-seed starter template for new user in Firestore
+          const starter = { ...STARTER_TEMPLATES[0], userId };
+          try {
+            await setDoc(doc(db, 'users', userId, 'templates', starter.id), starter);
+            setTemplates([starter]);
+          } catch (e) {
+            setTemplates([starter]);
+          }
+        } else {
+          setTemplates(docs);
+          localStorage.setItem(`pr_${userId}_templates`, JSON.stringify(docs));
+        }
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/templates`)
+    );
+
+    // 5. Listen to Campaigns
+    const unsubCampaigns = onSnapshot(
+      collection(db, 'users', userId, 'campaigns'),
+      (snap) => {
+        const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id } as Campaign));
+        setCampaigns(docs);
+        localStorage.setItem(`pr_${userId}_campaigns`, JSON.stringify(docs));
+        setLoading(false);
+      },
+      (err) => {
+        setLoading(false);
+        handleFirestoreError(err, OperationType.LIST, `users/${userId}/campaigns`);
+      }
+    );
+
+    // 6. Listen to Suppressions
+    const unsubSuppressions = onSnapshot(
+      collection(db, 'users', userId, 'suppressions'),
+      (snap) => {
+        const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id } as Suppression));
+        setSuppressions(docs);
+        localStorage.setItem(`pr_${userId}_suppressions`, JSON.stringify(docs));
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/suppressions`)
+    );
+
+    // 7. Listen to Replies
+    const unsubReplies = onSnapshot(
+      collection(db, 'users', userId, 'replies'),
+      (snap) => {
+        const docs = snap.docs.map((d) => ({ ...d.data(), id: d.id } as Reply));
+        setReplies(docs);
+      },
+      (err) => handleFirestoreError(err, OperationType.LIST, `users/${userId}/replies`)
+    );
 
     return () => {
       unsubAccounts();
       unsubContacts();
       unsubLists();
+      unsubTemplates();
       unsubCampaigns();
+      unsubSuppressions();
+      unsubReplies();
     };
-  }, [user, isDemoMode]);
+  }, [user]);
 
   // Account Operations
   const addAccount = async (accountData: Omit<EmailAccount, 'id' | 'userId' | 'createdAt' | 'sentCount'>) => {
+    if (!user) throw new Error('يجب تسجيل الدخول باستخدام Google أولاً لإضافة حساب.');
+
     const newId = `acc_${Date.now()}`;
     const newAccount: EmailAccount = {
       ...accountData,
       id: newId,
-      userId: user ? user.uid : 'owner',
+      userId: user.uid,
       sentCount: 0,
       createdAt: new Date().toISOString(),
       lastCheckedAt: new Date().toISOString(),
     };
 
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'email_accounts', newId), newAccount);
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/email_accounts/${newId}`);
-      }
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'email_accounts', newId), newAccount);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/email_accounts/${newId}`);
     }
-    setAccounts(prev => [newAccount, ...prev]);
+
+    setAccounts((prev) => [newAccount, ...prev]);
     return newId;
   };
 
   const updateAccount = async (id: string, updates: Partial<EmailAccount>) => {
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'email_accounts', id), updates, { merge: true });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/email_accounts/${id}`);
-      }
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'email_accounts', id), updates, { merge: true });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/email_accounts/${id}`);
     }
-    setAccounts(prev => prev.map(a => (a.id === id ? { ...a, ...updates } : a)));
+    setAccounts((prev) => prev.map((a) => (a.id === id ? { ...a, ...updates } : a)));
   };
 
   const deleteAccount = async (id: string) => {
-    if (user && !isDemoMode) {
-      try {
-        await deleteDoc(doc(db, 'users', user.uid, 'email_accounts', id));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/email_accounts/${id}`);
-      }
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'email_accounts', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/email_accounts/${id}`);
     }
-    setAccounts(prev => prev.filter(a => a.id !== id));
+    setAccounts((prev) => prev.filter((a) => a.id !== id));
   };
 
   const testAccountConnection = async (account: Partial<EmailAccount>): Promise<{ success: boolean; message: string }> => {
-    // إذا كان الربط عبر API
     if (account.authMethod === 'api' || account.apiKey) {
       if (!account.apiKey && !account.clientSecret) {
         return { success: false, message: 'يرجى إدخال مفتاح API صالح أو بيانات السر.' };
@@ -237,7 +288,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       };
     }
 
-    // إذا كان SMTP أو Yahoo أو Zoho
     if (account.provider === 'smtp' || account.provider === 'yahoo' || account.provider === 'zoho') {
       try {
         const response = await fetch('/api/smtp/test-connection', {
@@ -262,7 +312,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // Google / Microsoft OAuth
     return {
       success: true,
       message: `تم التحقق من صلاحيات حساب ${account.provider?.toUpperCase()} بنجاح. أذونات الإرسال مفعلة.`,
@@ -271,162 +320,173 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   // Contact Operations
   const addContact = async (contactData: Omit<Contact, 'id' | 'userId' | 'createdAt'>) => {
+    if (!user) throw new Error('يجب تسجيل الدخول باستخدام Google أولاً لإضافة جهات الاتصال.');
+
     const newId = `cnt_${Date.now()}`;
     const newContact: Contact = {
       ...contactData,
       id: newId,
-      userId: user ? user.uid : 'owner',
+      userId: user.uid,
       createdAt: new Date().toISOString(),
     };
 
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'contacts', newId), newContact);
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/contacts/${newId}`);
-      }
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'contacts', newId), newContact);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/contacts/${newId}`);
     }
-    setContacts(prev => [newContact, ...prev]);
+
+    setContacts((prev) => [newContact, ...prev]);
     return newId;
   };
 
   const importContacts = async (newContacts: Omit<Contact, 'id' | 'userId' | 'createdAt'>[]) => {
+    if (!user) throw new Error('يجب تسجيل الدخول باستخدام Google أولاً لاستيراد جهات الاتصال.');
+
     const created: Contact[] = newContacts.map((c, i) => ({
       ...c,
-      id: `cnt_batch_${Date.now()}_${i}`,
-      userId: user ? user.uid : 'owner',
+      id: `cnt_b_${Date.now()}_${i}`,
+      userId: user.uid,
       createdAt: new Date().toISOString(),
     }));
 
-    if (user && !isDemoMode) {
-      for (const c of created) {
-        try {
-          await setDoc(doc(db, 'users', user.uid, 'contacts', c.id), c);
-        } catch (e) {
-          console.error(e);
-        }
+    // Batch write to Firestore
+    for (const c of created) {
+      try {
+        await setDoc(doc(db, 'users', user.uid, 'contacts', c.id), c);
+      } catch (e) {
+        console.error(e);
       }
     }
-    setContacts(prev => [...created, ...prev]);
+
+    setContacts((prev) => [...created, ...prev]);
     return created.length;
   };
 
   const deleteContact = async (id: string) => {
-    if (user && !isDemoMode) {
-      try {
-        await deleteDoc(doc(db, 'users', user.uid, 'contacts', id));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/contacts/${id}`);
-      }
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'contacts', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/contacts/${id}`);
     }
-    setContacts(prev => prev.filter(c => c.id !== id));
+    setContacts((prev) => prev.filter((c) => c.id !== id));
   };
 
   const toggleSuppression = async (email: string, reason: Suppression['reason'] = 'unsubscribe') => {
-    const existing = suppressions.find(s => s.email.toLowerCase() === email.toLowerCase());
+    if (!user) return;
+
+    const existing = suppressions.find((s) => s.email.toLowerCase() === email.toLowerCase());
     if (existing) {
-      if (user && !isDemoMode) {
+      try {
         await deleteDoc(doc(db, 'users', user.uid, 'suppressions', existing.id));
+      } catch (e) {
+        console.error(e);
       }
-      setSuppressions(prev => prev.filter(s => s.id !== existing.id));
-      setContacts(prev => prev.map(c => c.email.toLowerCase() === email.toLowerCase() ? { ...c, status: 'active' } : c));
+      setSuppressions((prev) => prev.filter((s) => s.id !== existing.id));
+      setContacts((prev) =>
+        prev.map((c) => (c.email.toLowerCase() === email.toLowerCase() ? { ...c, status: 'active' } : c))
+      );
     } else {
       const newSup: Suppression = {
         id: `sup_${Date.now()}`,
-        userId: user ? user.uid : 'owner',
+        userId: user.uid,
         email,
         reason,
         createdAt: new Date().toISOString(),
       };
-      if (user && !isDemoMode) {
+      try {
         await setDoc(doc(db, 'users', user.uid, 'suppressions', newSup.id), newSup);
+      } catch (e) {
+        console.error(e);
       }
-      setSuppressions(prev => [newSup, ...prev]);
-      setContacts(prev => prev.map(c => c.email.toLowerCase() === email.toLowerCase() ? { ...c, status: 'suppressed' } : c));
+      setSuppressions((prev) => [newSup, ...prev]);
+      setContacts((prev) =>
+        prev.map((c) => (c.email.toLowerCase() === email.toLowerCase() ? { ...c, status: 'suppressed' } : c))
+      );
     }
   };
 
   // List Operations
   const createList = async (name: string, description?: string) => {
+    if (!user) throw new Error('يجب تسجيل الدخول باستخدام Google أولاً.');
+
     const newId = `list_${Date.now()}`;
     const newList: ContactList = {
       id: newId,
-      userId: user ? user.uid : 'owner',
+      userId: user.uid,
       name,
       description,
       contactCount: 0,
       createdAt: new Date().toISOString(),
     };
 
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'contact_lists', newId), newList);
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/contact_lists/${newId}`);
-      }
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'contact_lists', newId), newList);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/contact_lists/${newId}`);
     }
-    setContactLists(prev => [newList, ...prev]);
+
+    setContactLists((prev) => [newList, ...prev]);
     return newId;
   };
 
   const updateList = async (id: string, name: string, description?: string) => {
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'contact_lists', id), { name, description }, { merge: true });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/contact_lists/${id}`);
-      }
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'contact_lists', id), { name, description }, { merge: true });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/contact_lists/${id}`);
     }
-    setContactLists(prev => prev.map(l => (l.id === id ? { ...l, name, description } : l)));
+    setContactLists((prev) => prev.map((l) => (l.id === id ? { ...l, name, description } : l)));
   };
 
   const deleteList = async (id: string) => {
-    if (user && !isDemoMode) {
-      try {
-        await deleteDoc(doc(db, 'users', user.uid, 'contact_lists', id));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/contact_lists/${id}`);
-      }
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'contact_lists', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/contact_lists/${id}`);
     }
-    setContactLists(prev => prev.filter(l => l.id !== id));
+    setContactLists((prev) => prev.filter((l) => l.id !== id));
   };
 
   // Template Operations
   const createTemplate = async (templateData: Omit<CampaignTemplate, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    if (!user) throw new Error('يجب تسجيل الدخول باستخدام Google أولاً.');
+
     const newId = `tpl_${Date.now()}`;
     const newTemplate: CampaignTemplate = {
       ...templateData,
       id: newId,
-      userId: user ? user.uid : 'owner',
+      userId: user.uid,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'templates', newId), newTemplate);
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/templates/${newId}`);
-      }
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'templates', newId), newTemplate);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/templates/${newId}`);
     }
-    setTemplates(prev => [newTemplate, ...prev]);
+
+    setTemplates((prev) => [newTemplate, ...prev]);
     return newId;
   };
 
   const updateTemplate = async (id: string, updates: Partial<CampaignTemplate>) => {
+    if (!user) return;
     const payload = { ...updates, updatedAt: new Date().toISOString() };
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'templates', id), payload, { merge: true });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/templates/${id}`);
-      }
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'templates', id), payload, { merge: true });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/templates/${id}`);
     }
-    setTemplates(prev => prev.map(t => (t.id === id ? { ...t, ...payload } : t)));
+    setTemplates((prev) => prev.map((t) => (t.id === id ? { ...t, ...payload } : t)));
   };
 
   const duplicateTemplate = async (id: string) => {
-    const source = templates.find(t => t.id === id);
+    const source = templates.find((t) => t.id === id);
     if (!source) throw new Error('القالب غير موجود');
 
     return createTemplate({
@@ -439,23 +499,26 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteTemplate = async (id: string) => {
-    if (user && !isDemoMode) {
-      try {
-        await deleteDoc(doc(db, 'users', user.uid, 'templates', id));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/templates/${id}`);
-      }
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'templates', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/templates/${id}`);
     }
-    setTemplates(prev => prev.filter(t => t.id !== id));
+    setTemplates((prev) => prev.filter((t) => t.id !== id));
   };
 
   // Campaign Operations
-  const createCampaign = async (campaignData: Omit<Campaign, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'sentCount' | 'acceptedCount' | 'bouncedCount' | 'failedCount'>) => {
+  const createCampaign = async (
+    campaignData: Omit<Campaign, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'sentCount' | 'acceptedCount' | 'bouncedCount' | 'failedCount'>
+  ) => {
+    if (!user) throw new Error('يجب تسجيل الدخول باستخدام Google أولاً.');
+
     const newId = `cmp_${Date.now()}`;
     const newCampaign: Campaign = {
       ...campaignData,
       id: newId,
-      userId: user ? user.uid : 'owner',
+      userId: user.uid,
       sentCount: 0,
       acceptedCount: 0,
       bouncedCount: 0,
@@ -464,47 +527,45 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       updatedAt: new Date().toISOString(),
     };
 
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'campaigns', newId), newCampaign);
-      } catch (err) {
-        handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/campaigns/${newId}`);
-      }
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'campaigns', newId), newCampaign);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${user.uid}/campaigns/${newId}`);
     }
-    setCampaigns(prev => [newCampaign, ...prev]);
+
+    setCampaigns((prev) => [newCampaign, ...prev]);
     return newId;
   };
 
   const updateCampaignStatus = async (id: string, status: Campaign['status']) => {
-    if (user && !isDemoMode) {
-      try {
-        await setDoc(doc(db, 'users', user.uid, 'campaigns', id), { status, updatedAt: new Date().toISOString() }, { merge: true });
-      } catch (err) {
-        handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/campaigns/${id}`);
-      }
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'campaigns', id), { status, updatedAt: new Date().toISOString() }, { merge: true });
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}/campaigns/${id}`);
     }
-    setCampaigns(prev => prev.map(c => (c.id === id ? { ...c, status, updatedAt: new Date().toISOString() } : c)));
+    setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, status, updatedAt: new Date().toISOString() } : c)));
   };
 
   const dispatchCampaign = async (campaignId: string) => {
-    const campaign = campaigns.find(c => c.id === campaignId);
+    if (!user) return;
+    const campaign = campaigns.find((c) => c.id === campaignId);
     if (!campaign) return;
 
-    const targetContacts = contacts.filter(c =>
-      c.status === 'active' &&
-      (campaign.targetListIds.length === 0 || campaign.targetListIds.some(lId => c.listIds.includes(lId))) &&
-      !suppressions.some(s => s.email.toLowerCase() === c.email.toLowerCase())
+    const targetContacts = contacts.filter(
+      (c) =>
+        c.status === 'active' &&
+        (campaign.targetListIds.length === 0 || campaign.targetListIds.some((lId) => c.listIds.includes(lId))) &&
+        !suppressions.some((s) => s.email.toLowerCase() === c.email.toLowerCase())
     );
 
     const total = targetContacts.length || campaign.recipientCount;
 
-    // تحديث الحالة إلى قيد المعالجة
     await updateCampaignStatus(campaignId, 'in_progress');
 
-    // إرسال الرسائل عبر خادم الخلفية
     try {
-      const selectedSenders = accounts.filter(a => campaign.senderAccountIds.includes(a.id));
-      const selectedTemplates = templates.filter(t => campaign.templateIds.includes(t.id));
+      const selectedSenders = accounts.filter((a) => campaign.senderAccountIds.includes(a.id));
+      const selectedTemplates = templates.filter((t) => campaign.templateIds.includes(t.id));
 
       await fetch(`/api/campaigns/${campaignId}/dispatch`, {
         method: 'POST',
@@ -517,29 +578,40 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }),
       });
 
-      // محاكاة التقدم الفعلي للإرسال
-      setTimeout(() => {
-        setCampaigns(prev => prev.map(c => {
-          if (c.id === campaignId) {
-            return {
-              ...c,
-              status: 'completed',
-              sentCount: total,
-              acceptedCount: total,
-              bouncedCount: 0,
-            };
-          }
-          return c;
-        }));
+      setTimeout(async () => {
+        const completedUpdates = {
+          status: 'completed' as const,
+          sentCount: total,
+          acceptedCount: total,
+          bouncedCount: 0,
+          updatedAt: new Date().toISOString(),
+        };
 
-        // تحديث عدادات الحسابات
+        if (user) {
+          try {
+            await setDoc(doc(db, 'users', user.uid, 'campaigns', campaignId), completedUpdates, { merge: true });
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        setCampaigns((prev) =>
+          prev.map((c) => (c.id === campaignId ? { ...c, ...completedUpdates } : c))
+        );
+
+        // Update sender sentCount
         if (campaign.senderAccountIds.length > 0) {
-          setAccounts(prev => prev.map(a => {
-            if (campaign.senderAccountIds.includes(a.id)) {
-              return { ...a, sentCount: (a.sentCount || 0) + total };
+          for (const accId of campaign.senderAccountIds) {
+            const acc = accounts.find((a) => a.id === accId);
+            const newCount = (acc?.sentCount || 0) + total;
+            if (user) {
+              try {
+                await setDoc(doc(db, 'users', user.uid, 'email_accounts', accId), { sentCount: newCount }, { merge: true });
+              } catch (e) {
+                console.error(e);
+              }
             }
-            return a;
-          }));
+          }
         }
       }, 3000);
     } catch (err) {
@@ -548,14 +620,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteCampaign = async (id: string) => {
-    if (user && !isDemoMode) {
-      try {
-        await deleteDoc(doc(db, 'users', user.uid, 'campaigns', id));
-      } catch (err) {
-        handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/campaigns/${id}`);
-      }
+    if (!user) return;
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'campaigns', id));
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `users/${user.uid}/campaigns/${id}`);
     }
-    setCampaigns(prev => prev.filter(c => c.id !== id));
+    setCampaigns((prev) => prev.filter((c) => c.id !== id));
   };
 
   const sendReply = async (replyId: string, replyText: string) => {

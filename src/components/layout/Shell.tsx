@@ -35,7 +35,7 @@ interface ShellProps {
 }
 
 export function Shell({ activeTab, onSelectTab, onOpenAuthModal, onLockPlatform, children }: ShellProps) {
-  const { user, userProfile, isDemoMode, logout } = useAuth();
+  const { user, userProfile, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -139,10 +139,10 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, onLockPlatform,
               )}
               <div className="min-w-0">
                 <span className="text-xs font-bold text-slate-900 dark:text-white truncate block">
-                  {userProfile?.displayName || 'المالك'}
+                  {userProfile?.displayName || user?.displayName || user?.email || 'مستخدم متصل'}
                 </span>
-                <span className="text-[10px] text-slate-500 truncate block">
-                  وصول محمي بالكود
+                <span className="text-[10px] text-slate-500 truncate block" dir="ltr">
+                  {userProfile?.email || user?.email || 'حساب Google متصل'}
                 </span>
               </div>
             </div>
@@ -168,7 +168,7 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, onLockPlatform,
               </button>
             )}
 
-            {user || isDemoMode ? (
+            {user ? (
               <button
                 onClick={logout}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -233,12 +233,12 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, onLockPlatform,
               </button>
             )}
 
-            {!user && !isDemoMode && (
+            {!user && (
               <button
                 onClick={onOpenAuthModal}
                 className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap"
               >
-                دخول
+                دخول عبر Google
               </button>
             )}
           </div>
