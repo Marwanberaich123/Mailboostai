@@ -26,15 +26,13 @@ interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   enterDemoMode: () => void;
-  updatePlan: (plan: UserProfile['plan']) => Promise<void>;
 }
 
-const DEMO_USER_PROFILE: UserProfile = {
-  id: 'demo_user_postreach',
-  email: 'alex.founder@techscale.io',
-  displayName: 'Alex Morgan',
-  photoURL: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=128&auto=format&fit=crop&q=80',
-  plan: 'pro',
+const OWNER_USER_PROFILE: UserProfile = {
+  id: 'owner_user_postreach',
+  email: 'admin@postreach.io',
+  displayName: 'المالك',
+  plan: 'unlimited',
   createdAt: new Date().toISOString(),
 };
 
@@ -62,9 +60,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUserProfile({
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
-          displayName: data.displayName || firebaseUser.displayName || 'Sender',
+          displayName: data.displayName || firebaseUser.displayName || 'المالك',
           photoURL: data.photoURL || firebaseUser.photoURL || undefined,
-          plan: data.plan || 'free',
+          plan: 'unlimited',
           createdAt: data.createdAt || new Date().toISOString(),
           updatedAt: data.updatedAt,
         });
@@ -72,9 +70,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const initialProfile: UserProfile = {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
-          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Sender',
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'المالك',
           photoURL: firebaseUser.photoURL || undefined,
-          plan: 'free',
+          plan: 'unlimited',
           createdAt: new Date().toISOString(),
         };
 
@@ -86,13 +84,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err: any) {
       console.warn('Could not sync profile with Firestore:', err.message);
-      // Fallback in-memory profile
       setUserProfile({
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
-        displayName: firebaseUser.displayName || 'Sender',
+        displayName: firebaseUser.displayName || 'المالك',
         photoURL: firebaseUser.photoURL || undefined,
-        plan: 'free',
+        plan: 'unlimited',
         createdAt: new Date().toISOString(),
       });
     }
@@ -100,7 +97,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isDemoMode) {
-      setUserProfile(DEMO_USER_PROFILE);
+      setUserProfile(OWNER_USER_PROFILE);
       setLoading(false);
       return;
     }
@@ -129,11 +126,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error('Google Sign In Error:', err);
       if (err.code === 'auth/popup-blocked') {
-        setError('Popup was blocked by your browser. Please allow popups for this site and try again.');
+        setError('تم حظر النافذة المنبثقة من قبل متصفحك. يرجى السماح بالنوافذ المنبثقة ثم المحاولة مجدداً.');
       } else if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
-        setError('Authentication was cancelled before completion.');
+        setError('تم إلغاء عملية تسجيل الدخول قبل اكتمالها.');
       } else {
-        setError(err.message || 'Failed to sign in with Google.');
+        setError(err.message || 'فشل تسجيل الدخول عبر حساب Google.');
       }
       throw err;
     } finally {
@@ -152,11 +149,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error('Email Sign In Error:', err);
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError('Invalid email or password. Please check your credentials.');
+        setError('البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق من البيانات.');
       } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many failed attempts. Please reset your password or try again later.');
+        setError('تم حظر المحاولات مؤقتاً لكثرة المحاولات الخاطئة. يرجى إعادة تعيين كلمة المرور.');
       } else {
-        setError(err.message || 'Login failed.');
+        setError(err.message || 'فشل تسجيل الدخول.');
       }
       throw err;
     } finally {
@@ -178,11 +175,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error('Sign Up Error:', err);
       if (err.code === 'auth/email-already-in-use') {
-        setError('An account with this email address already exists. Please log in.');
+        setError('يوجد حساب مسجل بالفعل بهذا البريد الإلكتروني. يرجى تسجيل الدخول.');
       } else if (err.code === 'auth/weak-password') {
-        setError('Password should be at least 6 characters long.');
+        setError('يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.');
       } else {
-        setError(err.message || 'Account creation failed.');
+        setError(err.message || 'فشل إنشاء الحساب.');
       }
       throw err;
     } finally {
@@ -196,7 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await sendPasswordResetEmail(auth, email);
     } catch (err: any) {
       console.error('Password Reset Error:', err);
-      setError(err.message || 'Failed to send password reset email.');
+      setError(err.message || 'فشل إرسال بريد استعادة كلمة المرور.');
       throw err;
     }
   };
@@ -221,22 +218,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsDemoMode(true);
     localStorage.setItem('postreach_demo_mode', 'true');
     setUser(null);
-    setUserProfile(DEMO_USER_PROFILE);
+    setUserProfile(OWNER_USER_PROFILE);
     setError(null);
-  };
-
-  const updatePlan = async (plan: UserProfile['plan']) => {
-    if (userProfile) {
-      const updated = { ...userProfile, plan };
-      setUserProfile(updated);
-      if (user) {
-        try {
-          await setDoc(doc(db, 'users', user.uid), { plan }, { merge: true });
-        } catch (e) {
-          console.error('Error updating plan:', e);
-        }
-      }
-    }
   };
 
   return (
@@ -254,7 +237,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         logout,
         enterDemoMode,
-        updatePlan,
       }}
     >
       {children}

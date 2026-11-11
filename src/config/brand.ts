@@ -1,137 +1,70 @@
 /**
- * Central Brand and Subscription Configuration for PostReach
- * Easily configurable from this single source of truth.
+ * إعدادات الهوية والمزودين لمنصة بوست ريتش (PostReach)
+ * مهيأة بالكامل باللغة العربية للاستخدام الشخصي المستقل وبدون أي قيود أو اشتراكات مدفوعة.
  */
 
-export interface SubscriptionPlan {
-  id: 'free' | 'starter' | 'pro' | 'business';
+export interface ProviderDefinition {
+  id: 'gmail' | 'outlook' | 'yahoo' | 'zoho' | 'smtp';
   name: string;
-  badge?: string;
-  tagline: string;
-  priceMonthly: number;
-  maxAccounts: number;
-  monthlyEmailLimit: number;
-  maxTemplates: number;
-  maxContactLists: number;
-  features: string[];
-  recommended?: boolean;
+  badge: string;
+  description: string;
+  dailyQuotaHint: string;
+  authMethods: ('api' | 'oauth' | 'smtp')[];
+  defaultHost?: string;
+  defaultPort?: number;
+  defaultEncryption?: 'ssl' | 'tls' | 'none';
 }
 
 export const BRAND_CONFIG = {
-  name: 'PostReach',
-  tagline: 'Unified Outbound & Inbox Platform',
-  description: 'Connect multiple sending accounts across Gmail, Outlook, Yahoo, Zoho, and SMTP to orchestrate high-deliverability email campaigns from a unified cockpit.',
+  name: 'بوست ريتش',
+  englishName: 'PostReach',
+  tagline: 'المنصة الموحدة لإدارة وإرسال البريد الإلكتروني',
+  description: 'اربط حسابات البريد الإلكتروني المتعددة (Gmail, Outlook, Yahoo, Zoho, SMTP/API) وأطلق حملاتك البريدية وتابع وصول الرسائل من لوحة تحكم واحدة متكاملة.',
   version: '1.0.0',
-  supportEmail: 'support@postreach.io',
-  docsUrl: 'https://docs.postreach.io',
+  supportEmail: 'admin@postreach.io',
   colors: {
     primary: '#4F46E5', // Electric Indigo
     primaryHover: '#4338CA',
-    navyCanvas: '#0A1128',
-    navyCard: '#111827',
   },
-  plans: [
-    {
-      id: 'free',
-      name: 'Free Starter',
-      tagline: 'For individual founders exploring multi-inbox sending',
-      priceMonthly: 0,
-      maxAccounts: 2,
-      monthlyEmailLimit: 500,
-      maxTemplates: 3,
-      maxContactLists: 3,
-      features: [
-        'Up to 2 connected email accounts',
-        '500 messages per month',
-        'Basic CSV contact import & duplicate scrub',
-        'Standard HTML & text email composer',
-        'Suppression list & unsubscribe link',
-        '48-hour activity log history',
-      ],
-    },
-    {
-      id: 'starter',
-      name: 'Professional',
-      tagline: 'For growing sales reps & consultancies scaling outreach',
-      priceMonthly: 29,
-      maxAccounts: 5,
-      monthlyEmailLimit: 5000,
-      maxTemplates: 10,
-      maxContactLists: 10,
-      features: [
-        'Up to 5 connected accounts (Gmail, Outlook, SMTP)',
-        '5,000 messages per month',
-        'Scheduled delivery & throttle interval controls',
-        'Multi-template variations (A/B testing)',
-        'Detailed bounce & provider acceptance analytics',
-        'Priority email verification',
-      ],
-      recommended: true,
-    },
-    {
-      id: 'pro',
-      name: 'Growth Team',
-      tagline: 'For agencies and multi-brand outbound operations',
-      priceMonthly: 79,
-      maxAccounts: 15,
-      monthlyEmailLimit: 25000,
-      maxTemplates: 50,
-      maxContactLists: 50,
-      features: [
-        'Up to 15 connected accounts across all providers',
-        '25,000 messages per month',
-        'Unified Replies Inbox with thread reader',
-        'Custom sending rate limits per account',
-        'Automated bounce classification & auto-suppression',
-        'CSV export of delivery reports & logs',
-      ],
-    },
-    {
-      id: 'business',
-      name: 'Enterprise Scale',
-      tagline: 'For high-throughput organizations needing custom limits',
-      priceMonthly: 199,
-      maxAccounts: 50,
-      monthlyEmailLimit: 100000,
-      maxTemplates: 200,
-      maxContactLists: 200,
-      features: [
-        'Up to 50 connected accounts (custom quota upgrades)',
-        '100,000+ messages per month',
-        'Custom SMTP cluster support',
-        'Team role-based access & audit logs',
-        'Dedicated deliverability IP consultation',
-        'Webhook delivery event notifications',
-      ],
-    },
-  ] as SubscriptionPlan[],
+  // حساب المالك الشخصي الكامل (مجاني وغير محدود بالكامل)
+  userTier: {
+    name: 'الوصول الكامل واللامحدود',
+    isUnlimited: true,
+    maxAccounts: 999,
+    monthlyEmailLimit: 9999999,
+    features: [
+      'ربط عدد غير محدود من حسابات البريد عبر API أو تسجيل الدخول',
+      'إرسال غير محدود وفق حدود مزودي الخدمة الرسمية',
+      'منشئ حملات وقوالب رسائل متعددة غير محدودة',
+      'فاحص الاتصال المباشر وخوارزمية تجنب الإزعاج',
+      'صندوق الردود والوارد الموحد',
+      'قوائم استبعاد المشتركين وإلغاء الاشتراك التلقائي',
+    ],
+  },
   providers: [
     {
       id: 'gmail',
       name: 'Google Gmail / Workspace',
-      badge: 'Official API',
-      icon: 'Mail',
-      description: 'Official Google OAuth sending via Gmail API (https://www.googleapis.com/auth/gmail.send).',
-      dailyQuotaHint: '500 msgs/day (free Gmail) or 2,000 msgs/day (Google Workspace)',
-      authType: 'oauth',
+      badge: 'واجهة API أو OAuth',
+      description: 'الربط المباشر عبر Google OAuth أو إدخال مفاتيح Gmail API (نطاق gmail.send).',
+      dailyQuotaHint: '500 رسالة/يوم للبريد المجاني أو 2,000 رسالة/يوم لحسابات Workspace',
+      authMethods: ['oauth', 'api'],
     },
     {
       id: 'outlook',
       name: 'Microsoft Outlook / 365',
-      badge: 'Graph API',
-      icon: 'Send',
-      description: 'Microsoft 365 & Outlook.com using Microsoft Graph API with Mail.Send permission.',
-      dailyQuotaHint: 'Up to 10,000 recipients/day (M365 Enterprise) or 300 msgs/day (personal)',
-      authType: 'oauth',
+      badge: 'Graph API أو تسجيل دخول',
+      description: 'الربط عبر Microsoft Graph API باستخدام إذن Mail.Send أو تسجيل الدخول.',
+      dailyQuotaHint: 'حتى 10,000 مستلم/يوم لحسابات Microsoft 365 Enterprise',
+      authMethods: ['oauth', 'api'],
     },
     {
       id: 'yahoo',
       name: 'Yahoo Mail',
-      badge: 'App Password',
-      icon: 'Globe',
-      description: 'Connect via Yahoo secure SMTP using an authorized Yahoo Account App Password.',
-      dailyQuotaHint: '500 msgs/day standard limit',
-      authType: 'smtp',
+      badge: 'كلمة مرور التطبيق / SMTP',
+      description: 'الربط الآمن عبر خادم Yahoo SMTP باستخدام كلمة مرور التطبيق (App Password).',
+      dailyQuotaHint: '500 رسالة/يوم كحد قياسي',
+      authMethods: ['smtp'],
       defaultHost: 'smtp.mail.yahoo.com',
       defaultPort: 465,
       defaultEncryption: 'ssl',
@@ -139,26 +72,24 @@ export const BRAND_CONFIG = {
     {
       id: 'zoho',
       name: 'Zoho Mail',
-      badge: 'Secure SMTP / API',
-      icon: 'Server',
-      description: 'Connect your professional Zoho Mail account via Zoho SMTP or App Password.',
-      dailyQuotaHint: 'Up to 1,000 msgs/day depending on Zoho plan',
-      authType: 'smtp',
+      badge: 'Zoho API / SMTP',
+      description: 'الربط عبر Zoho Mail API أو خادم SMTP مع كلمة مرور التطبيق.',
+      dailyQuotaHint: 'حتى 1,000 رسالة/يوم حسب إعدادات النطاق',
+      authMethods: ['api', 'smtp'],
       defaultHost: 'smtppro.zoho.com',
       defaultPort: 465,
       defaultEncryption: 'ssl',
     },
     {
       id: 'smtp',
-      name: 'Custom SMTP Server',
-      badge: 'Universal',
-      icon: 'Terminal',
-      description: 'Connect Amazon SES, SendGrid, Mailgun, Postmark, or your own dedicated Postfix server.',
-      dailyQuotaHint: 'Governed by your server / provider reputation',
-      authType: 'smtp',
+      name: 'خادم SMTP مخصص أو API',
+      badge: 'SES / SendGrid / Postmark',
+      description: 'ربط أي مزود سحابي (Amazon SES, SendGrid, Mailgun, Postmark) عبر SMTP أو مفتاح API.',
+      dailyQuotaHint: 'يخضع لحدود سمعة الخادم أو المزود السحابي',
+      authMethods: ['smtp', 'api'],
       defaultHost: '',
       defaultPort: 587,
       defaultEncryption: 'tls',
     },
-  ],
+  ] as ProviderDefinition[],
 };

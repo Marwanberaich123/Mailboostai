@@ -10,7 +10,6 @@ import {
   Clock,
   Inbox,
   BarChart3,
-  CreditCard,
   Settings,
   HelpCircle,
   Sun,
@@ -19,8 +18,8 @@ import {
   LogIn,
   Menu,
   X,
-  ExternalLink,
-  ShieldAlert,
+  ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -31,31 +30,30 @@ interface ShellProps {
   activeTab: NavigationTab;
   onSelectTab: (tab: NavigationTab) => void;
   onOpenAuthModal: () => void;
+  onLockPlatform?: () => void;
   children: React.ReactNode;
 }
 
-export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: ShellProps) {
+export function Shell({ activeTab, onSelectTab, onOpenAuthModal, onLockPlatform, children }: ShellProps) {
   const { user, userProfile, isDemoMode, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // قائمة التنقل باللغة العربية
   const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'accounts', label: 'Email Accounts', icon: MailCheck },
-    { id: 'contacts', label: 'Contacts', icon: Users },
-    { id: 'lists', label: 'Contact Lists', icon: FolderKanban },
-    { id: 'campaigns', label: 'Campaigns', icon: Send },
-    { id: 'create-campaign', label: 'Create Campaign', icon: PlusCircle, isAction: true },
-    { id: 'templates', label: 'Templates', icon: FileText },
-    { id: 'scheduled', label: 'Scheduled Queue', icon: Clock },
-    { id: 'replies', label: 'Replies', icon: Inbox },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'billing', label: 'Billing & Plans', icon: CreditCard },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'help', label: 'Help Center', icon: HelpCircle },
+    { id: 'dashboard', label: 'لوحة التحكم', icon: LayoutDashboard },
+    { id: 'accounts', label: 'حسابات الإرسال (API / الدخول)', icon: MailCheck },
+    { id: 'contacts', label: 'المشتركون والمستلمون', icon: Users },
+    { id: 'lists', label: 'قوائم الجمهور', icon: FolderKanban },
+    { id: 'campaigns', label: 'الحملات البريدية', icon: Send },
+    { id: 'create-campaign', label: 'إنشاء حملة جديدة', icon: PlusCircle, isAction: true },
+    { id: 'templates', label: 'قوالب الرسائل', icon: FileText },
+    { id: 'scheduled', label: 'سجل وطابور الإرسال', icon: Clock },
+    { id: 'replies', label: 'الردود والوارد', icon: Inbox },
+    { id: 'analytics', label: 'التحليلات والوصول', icon: BarChart3 },
+    { id: 'settings', label: 'الإعدادات الشخصية', icon: Settings },
+    { id: 'help', label: 'دليل ربط الحسابات و API', icon: HelpCircle },
   ] as const;
-
-  const currentPlan = BRAND_CONFIG.plans.find(p => p.id === userProfile?.plan) || BRAND_CONFIG.plans[0];
 
   const handleNavClick = (tabId: NavigationTab) => {
     onSelectTab(tabId);
@@ -63,47 +61,37 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
   };
 
   return (
-    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
-      {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 select-none">
-        {/* Brand Lockup */}
-        <div className="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors font-sans" dir="rtl">
+      {/* القائمة الجانبية للشاشات الكبيرة */}
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 select-none">
+        {/* شعار المنصة */}
+        <div className="h-16 flex items-center px-6 border-b border-slate-200 dark:border-slate-800 gap-3">
           <button
             onClick={() => handleNavClick('dashboard')}
-            className="flex items-center gap-2.5 text-left group"
+            className="flex items-center gap-3 text-right group w-full"
           >
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0">
               PR
             </div>
-            <div>
-              <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white block leading-tight">
+            <div className="min-w-0">
+              <span className="font-bold text-sm tracking-tight text-slate-900 dark:text-white block leading-tight truncate">
                 {BRAND_CONFIG.name}
               </span>
-              <span className="text-[11px] text-slate-600 dark:text-slate-300 block">
-                Multi-Provider SaaS
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate">
+                منصة الإرسال الموحدة
               </span>
             </div>
           </button>
         </div>
 
-        {/* Demo Mode Notice */}
-        {isDemoMode && (
-          <div className="mx-4 mt-3 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-md text-xs text-amber-700 dark:text-amber-400 flex items-start gap-2">
-            <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-            <div>
-              <span className="font-medium block">Interactive Demo Mode</span>
-              <button
-                onClick={onOpenAuthModal}
-                className="underline text-[11px] hover:text-amber-800 dark:hover:text-amber-300 mt-0.5 inline-block"
-              >
-                Sign in with Google
-              </button>
-            </div>
-          </div>
-        )}
+        {/* شارة الاستخدام الشخصي المفتوح */}
+        <div className="mx-3 mt-3 p-2 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/60 rounded-md text-[11px] text-indigo-800 dark:text-indigo-300 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+          <span className="truncate">نسخة شخصية كاملة مجانية</span>
+        </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        {/* عناصر القائمة الجانبية */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
           {navigationItems.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -111,9 +99,9 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
               <button
                 key={item.id}
                 onClick={() => handleNavClick(item.id as NavigationTab)}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md transition-colors text-left ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-md transition-colors text-right ${
                   isActive
-                    ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 font-semibold'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-400 font-bold'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/60'
                 }`}
               >
@@ -122,10 +110,10 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
                     isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'
                   }`}
                 />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate flex-1">{item.label}</span>
                 {item.id === 'create-campaign' && (
-                  <span className="ml-auto text-[10px] bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded font-mono">
-                    NEW
+                  <span className="text-[10px] bg-indigo-600 text-white px-1.5 py-0.5 rounded font-mono font-normal">
+                    جديد
                   </span>
                 )}
               </button>
@@ -133,7 +121,7 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
           })}
         </nav>
 
-        {/* User Card & Footing */}
+        {/* بطاقة المستخدم والتحكم في المظهر وزر القفل */}
         <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-800 mb-2">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -141,27 +129,27 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
                 <img
                   src={userProfile.photoURL}
                   alt={userProfile.displayName}
-                  className="w-8 h-8 rounded-full object-cover shrink-0"
+                  className="w-7 h-7 rounded-full object-cover shrink-0"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center font-medium text-xs shrink-0">
-                  {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'U'}
+                <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-xs shrink-0">
+                  {userProfile?.displayName ? userProfile.displayName.charAt(0).toUpperCase() : 'أ'}
                 </div>
               )}
               <div className="min-w-0">
-                <span className="text-xs font-medium text-slate-900 dark:text-white truncate block">
-                  {userProfile?.displayName || 'User'}
+                <span className="text-xs font-bold text-slate-900 dark:text-white truncate block">
+                  {userProfile?.displayName || 'المالك'}
                 </span>
-                <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate block">
-                  {currentPlan.name}
+                <span className="text-[10px] text-slate-500 truncate block">
+                  وصول محمي بالكود
                 </span>
               </div>
             </div>
 
             <button
               onClick={toggleTheme}
-              title="Toggle theme"
+              title="تبديل المظهر الليلي/النهاري"
               className="p-1.5 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
@@ -169,32 +157,42 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
           </div>
 
           <div className="flex items-center gap-1.5">
+            {onLockPlatform && (
+              <button
+                onClick={onLockPlatform}
+                title="قفل المنصة برمز الأمان"
+                className="py-1.5 px-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors flex items-center justify-center gap-1.5"
+              >
+                <Lock className="w-3.5 h-3.5 text-indigo-500" />
+                <span>قفل</span>
+              </button>
+            )}
+
             {user || isDemoMode ? (
               <button
                 onClick={logout}
                 className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Sign Out</span>
+                <span>خروج</span>
               </button>
             ) : (
               <button
                 onClick={onOpenAuthModal}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors"
               >
                 <LogIn className="w-3.5 h-3.5" />
-                <span>Sign In</span>
+                <span>دخول</span>
               </button>
             )}
           </div>
         </div>
       </aside>
 
-      {/* Main Content Viewport */}
+      {/* منطقة المحتوى الرئيسية */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Top Bar Contract (3-Zone Header) */}
-        <header className="h-16 flex items-center justify-between gap-8 px-4 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
-          {/* Zone 1: Brand wordmark or contextual breadcrumb */}
+        {/* الشريط العلوي */}
+        <header className="h-16 flex items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -202,78 +200,60 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="font-semibold text-slate-900 dark:text-white capitalize">
-                {activeTab.replace('-', ' ')}
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <span className="font-bold text-slate-900 dark:text-white">
+                {navigationItems.find(n => n.id === activeTab)?.label || 'لوحة التحكم'}
               </span>
               <span className="text-slate-400">/</span>
-              <span className="text-xs text-slate-600 dark:text-slate-300 font-mono">
+              <span className="text-xs text-slate-500 font-mono">
                 {BRAND_CONFIG.name}
               </span>
             </div>
           </div>
 
-          {/* Zone 2: Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-slate-600 dark:text-slate-300">
-            <button
-              onClick={() => handleNavClick('accounts')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap"
-            >
-              Accounts
-            </button>
-            <button
-              onClick={() => handleNavClick('contacts')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap"
-            >
-              Recipients
-            </button>
-            <button
-              onClick={() => handleNavClick('campaigns')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap"
-            >
-              Dispatches
-            </button>
-            <button
-              onClick={() => handleNavClick('analytics')}
-              className="hover:text-slate-900 dark:hover:text-white transition-colors whitespace-nowrap"
-            >
-              Deliverability
-            </button>
-          </nav>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {onLockPlatform && (
+              <button
+                onClick={onLockPlatform}
+                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors whitespace-nowrap"
+                title="إعادة قفل المنصة"
+              >
+                <Lock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                <span className="hidden sm:inline">قفل المنصة</span>
+              </button>
+            )}
 
-          {/* Zone 3: 1 Primary Action */}
-          <div className="flex items-center gap-3 shrink-0">
             {activeTab !== 'create-campaign' && (
               <button
                 onClick={() => handleNavClick('create-campaign')}
-                className="flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors whitespace-nowrap"
               >
                 <PlusCircle className="w-3.5 h-3.5" />
-                <span>New Campaign</span>
+                <span>حملة جديدة</span>
               </button>
             )}
 
             {!user && !isDemoMode && (
               <button
                 onClick={onOpenAuthModal}
-                className="px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap"
+                className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors whitespace-nowrap"
               >
-                Sign In
+                دخول
               </button>
             )}
           </div>
         </header>
 
-        {/* Mobile Navigation Drawer */}
+        {/* القائمة المنسدلة للشاشات الصغيرة */}
         {mobileMenuOpen && (
           <div className="fixed inset-0 z-50 lg:hidden flex">
             <div
               className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="relative w-72 max-w-xs bg-white dark:bg-slate-900 h-full flex flex-col p-4 shadow-xl z-10 border-r border-slate-200 dark:border-slate-800">
-              <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 mb-2">
-                <span className="font-bold text-base text-slate-900 dark:text-white">
+            <div className="relative w-72 max-w-xs bg-white dark:bg-slate-900 h-full flex flex-col p-4 shadow-xl z-10 border-l border-slate-200 dark:border-slate-800 text-right">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-2">
+                <span className="font-bold text-sm text-slate-900 dark:text-white">
                   {BRAND_CONFIG.name}
                 </span>
                 <button
@@ -292,9 +272,9 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
                     <button
                       key={item.id}
                       onClick={() => handleNavClick(item.id as NavigationTab)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-left ${
+                      className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-md text-right ${
                         isActive
-                          ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-400 font-semibold'
+                          ? 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-400 font-bold'
                           : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
@@ -304,11 +284,26 @@ export function Shell({ activeTab, onSelectTab, onOpenAuthModal, children }: She
                   );
                 })}
               </div>
+
+              {onLockPlatform && (
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 mt-2">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      onLockPlatform();
+                    }}
+                    className="w-full py-2 px-3 text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 rounded-lg flex items-center justify-center gap-2"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>قفل المنصة برمز الأمان</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
 
-        {/* View Content Area */}
+        {/* محتوى الشاشة */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {children}

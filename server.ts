@@ -88,19 +88,48 @@ app.post('/api/smtp/send-test', async (req: Request, res: Response) => {
     return res.status(400).json({ success: false, error: 'senderConfig, to, and subject are required.' });
   }
 
-  const { host, port: smtpPort, encryption, username, password, email } = senderConfig;
-  const isSecure = encryption === 'ssl' || smtpPort === 465;
+  let { host, port: smtpPort, encryption, username, password, email, provider, apiKey } = senderConfig;
+
+  // Auto-fill provider default hosts if not explicitly given
+  if (!host) {
+    if (provider === 'gmail') {
+      host = 'smtp.gmail.com';
+      smtpPort = smtpPort || 465;
+      encryption = encryption || 'ssl';
+    } else if (provider === 'outlook') {
+      host = 'smtp.office365.com';
+      smtpPort = smtpPort || 587;
+      encryption = encryption || 'tls';
+    } else if (provider === 'yahoo') {
+      host = 'smtp.mail.yahoo.com';
+      smtpPort = smtpPort || 465;
+      encryption = encryption || 'ssl';
+    } else if (provider === 'zoho') {
+      host = 'smtppro.zoho.com';
+      smtpPort = smtpPort || 465;
+      encryption = encryption || 'ssl';
+    }
+  }
+
+  // If API key is provided for transactional email providers
+  if (apiKey && !password) {
+    password = apiKey;
+    if (!username) username = 'apikey';
+  }
+
+  const isSecure = encryption === 'ssl' || Number(smtpPort) === 465;
 
   try {
     const transporter = nodemailer.createTransport({
       host,
-      port: Number(smtpPort),
+      port: Number(smtpPort || 587),
       secure: isSecure,
-      auth: {
+      auth: (username || password) ? {
         user: username || email,
         pass: password || '',
-      },
+      } : undefined,
       tls: { rejectUnauthorized: false },
+      connectionTimeout: 12000,
     });
 
     const info = await transporter.sendMail({

@@ -6,8 +6,7 @@ import {
   User,
   Eye,
   EyeOff,
-  ArrowRight,
-  ShieldCheck,
+  ArrowLeft,
   Sparkles,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -65,7 +64,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       setLoading(true);
       try {
         await resetPassword(email);
-        setInfoMessage('Password reset instructions sent. Please check your inbox.');
+        setInfoMessage('تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني.');
       } catch (err) {
         // Error in context
       } finally {
@@ -76,11 +75,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     if (mode === 'register') {
       if (password !== confirmPassword) {
-        alert('Passwords do not match.');
+        alert('كلمات المرور غير متطابقة.');
         return;
       }
       if (!agreedTerms) {
-        alert('Please accept the Terms of Service to create an account.');
+        alert('يرجى الموافقة على شروط الاستخدام لمتابعة التسجيل.');
         return;
       }
       setLoading(true);
@@ -113,25 +112,25 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir="rtl">
       <div
         className="fixed inset-0 bg-slate-900/70 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10">
-        {/* Header */}
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10 text-right">
+        {/* رأس النافذة */}
         <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              {mode === 'login' && 'Sign in to PostReach'}
-              {mode === 'register' && 'Create your account'}
-              {mode === 'forgot' && 'Reset your password'}
+            <h2 className="text-base font-bold text-slate-900 dark:text-white">
+              {mode === 'login' && 'تسجيل الدخول إلى بوست ريتش'}
+              {mode === 'register' && 'إنشاء حساب جديد للمالك'}
+              {mode === 'forgot' && 'استعادة كلمة المرور'}
             </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-              {mode === 'login' && 'Manage your email accounts and dispatches'}
-              {mode === 'register' && 'Get started with high-deliverability sending'}
-              {mode === 'forgot' && 'Enter your email to receive recovery instructions'}
+            <p className="text-xs text-slate-500 mt-0.5">
+              {mode === 'login' && 'لوحة التحكم وإدارة الإرسال الموحدة'}
+              {mode === 'register' && 'وصول كامل ومفتوح بدون أي اشتراكات'}
+              {mode === 'forgot' && 'أدخل بريدك لإرسال تعليمات الاستعادة'}
             </p>
           </div>
           <button
@@ -142,28 +141,28 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
         </div>
 
-        {/* Form Body */}
+        {/* محتوى النموذج */}
         <div className="p-6 space-y-4">
           {error && (
-            <div className="p-3 text-xs text-rose-700 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-md">
+            <div className="p-3 text-xs text-rose-700 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg">
               {error}
             </div>
           )}
 
           {infoMessage && (
-            <div className="p-3 text-xs text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-md">
+            <div className="p-3 text-xs text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 rounded-lg">
               {infoMessage}
             </div>
           )}
 
           {mode !== 'forgot' && (
             <>
-              {/* Google Sign In Button */}
+              {/* زر Google */}
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-750 shadow-xs transition-colors"
+                className="w-full flex items-center justify-center gap-3 py-2.5 px-4 text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-750 shadow-xs transition-colors"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path
@@ -183,13 +182,13 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
                   />
                 </svg>
-                <span>Continue with Google</span>
+                <span>المتابعة باستخدام حساب Google</span>
               </button>
 
               <div className="relative flex items-center justify-center">
                 <div className="border-t border-slate-200 dark:border-slate-800 w-full" />
-                <span className="bg-white dark:bg-slate-900 px-2 text-[11px] text-slate-400 absolute uppercase tracking-wider">
-                  or with email
+                <span className="bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-400 absolute">
+                  أو بالبريد الإلكتروني
                 </span>
               </div>
             </>
@@ -198,36 +197,37 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <form onSubmit={handleSubmit} className="space-y-3">
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Full Name
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  الاسم الكامل
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <User className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
                   <input
                     type="text"
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Alex Morgan"
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    placeholder="الاسم الكريم"
+                    className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Email Address
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                البريد الإلكتروني
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <Mail className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alex@company.com"
-                  className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  placeholder="admin@domain.com"
+                  className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                  dir="ltr"
                 />
               </div>
             </div>
@@ -235,8 +235,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             {mode !== 'forgot' && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                    Password
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    كلمة المرور
                   </label>
                   {mode === 'login' && (
                     <button
@@ -245,26 +245,27 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         setMode('forgot');
                         clearError();
                       }}
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline"
+                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
                     >
-                      Forgot password?
+                      نسيت كلمة المرور؟
                     </button>
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-9 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pr-9 pl-9 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                    dir="ltr"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    className="absolute left-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -274,18 +275,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
             {mode === 'register' && (
               <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  Confirm Password
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  تأكيد كلمة المرور
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                    className="w-full pr-9 pl-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-hidden focus:ring-1 focus:ring-indigo-500"
+                    dir="ltr"
                   />
                 </div>
               </div>
@@ -301,22 +303,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
                 />
                 <label htmlFor="remember" className="text-xs text-slate-600 dark:text-slate-400">
-                  Remember this device for 30 days
-                </label>
-              </div>
-            )}
-
-            {mode === 'register' && (
-              <div className="flex items-start gap-2">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  checked={agreedTerms}
-                  onChange={(e) => setAgreedTerms(e.target.checked)}
-                  className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
-                />
-                <label htmlFor="terms" className="text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
-                  I agree to the PostReach Terms of Service and Anti-Spam Policy. I confirm all recipients are opt-in.
+                  تذكر هذا الجهاز للجلسات القادمة
                 </label>
               </div>
             )}
@@ -324,55 +311,61 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-colors flex items-center justify-center gap-2"
             >
               <span>
-                {loading ? 'Processing...' : mode === 'login' ? 'Sign In' : mode === 'register' ? 'Create Account' : 'Send Reset Link'}
+                {loading
+                  ? 'جاري المعالجة...'
+                  : mode === 'login'
+                  ? 'تسجيل الدخول'
+                  : mode === 'register'
+                  ? 'إنشاء الحساب'
+                  : 'إرسال رابط الاستعادة'}
               </span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowLeft className="w-3.5 h-3.5" />
             </button>
           </form>
 
-          {/* Mode switch */}
+          {/* تبديل الوضع */}
           <div className="text-center text-xs text-slate-600 dark:text-slate-400 pt-1">
             {mode === 'login' ? (
               <span>
-                Don't have an account?{' '}
+                ليس لديك حساب؟{' '}
                 <button
                   onClick={() => {
                     setMode('register');
                     clearError();
                   }}
-                  className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+                  className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
                 >
-                  Create one now
+                  إنشاء حساب جديد
                 </button>
               </span>
             ) : (
               <span>
-                Already have an account?{' '}
+                لديك حساب بالفعل؟{' '}
                 <button
                   onClick={() => {
                     setMode('login');
                     clearError();
                   }}
-                  className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+                  className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
                 >
-                  Sign in
+                  تسجيل الدخول
                 </button>
               </span>
             )}
           </div>
 
-          {/* Interactive Demo Escape Hatch */}
+          {/* الدخول المباشر كمالك للمنصة */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={handleDemoClick}
-              className="w-full py-2 px-3 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg flex items-center justify-center gap-2 transition-colors"
+              className="w-full py-2 px-3 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl flex items-center justify-center gap-2 transition-colors"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span>Explore Interactive Demo Sandbox</span>
+              <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+              <span>الدخول المباشر كمالك للمنصة الآن</span>
             </button>
           </div>
         </div>

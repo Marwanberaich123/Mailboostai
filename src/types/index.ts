@@ -1,15 +1,15 @@
-export type PlanTier = 'free' | 'starter' | 'pro' | 'business';
-
 export type ProviderType = 'gmail' | 'outlook' | 'yahoo' | 'zoho' | 'smtp';
 
 export type AccountStatus = 'connected' | 'reconnect_required' | 'rate_limited' | 'disconnected';
+
+export type AuthMethodType = 'api' | 'oauth' | 'smtp';
 
 export interface UserProfile {
   id: string;
   email: string;
   displayName: string;
   photoURL?: string;
-  plan: PlanTier;
+  plan: 'unlimited';
   createdAt: string;
   updatedAt?: string;
 }
@@ -18,14 +18,21 @@ export interface EmailAccount {
   id: string;
   userId: string;
   provider: ProviderType;
+  authMethod: AuthMethodType;
   email: string;
   displayName?: string;
   status: AccountStatus;
+  // SMTP credentials
   host?: string;
   port?: number;
   encryption?: 'tls' | 'ssl' | 'none';
   username?: string;
   password?: string;
+  // API credentials
+  apiKey?: string;
+  clientId?: string;
+  clientSecret?: string;
+  refreshToken?: string;
   sentCount: number;
   dailyLimit: number;
   lastCheckedAt?: string;
@@ -135,6 +142,5 @@ export type NavigationTab =
   | 'scheduled'
   | 'replies'
   | 'analytics'
-  | 'billing'
   | 'settings'
   | 'help';

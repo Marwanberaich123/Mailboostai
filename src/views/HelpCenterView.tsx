@@ -15,28 +15,28 @@ export function HelpCenterView() {
   const [activeGuide, setActiveGuide] = useState<'gmail' | 'microsoft' | 'smtp' | 'deliverability'>('gmail');
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto text-right">
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-          Help Center &amp; Integration Guides
+          دليل ربط الحسابات وواجهات برمجة التطبيقات (API)
         </h1>
         <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-          Complete step-by-step setup documentation for Google Cloud Console, Microsoft Azure, and SMTP providers.
+          شروحات كاملة خطوة بخطوة باللغة العربية لربط Google Cloud، Microsoft Azure، وخوادم SMTP.
         </p>
       </div>
 
-      {/* Guide Tabs */}
+      {/* تبويبات الشروحات */}
       <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
         {[
-          { id: 'gmail', label: 'Google Gmail API Setup' },
-          { id: 'microsoft', label: 'Microsoft 365 / Graph' },
-          { id: 'smtp', label: 'SMTP App Passwords' },
-          { id: 'deliverability', label: 'Deliverability & DNS (SPF/DKIM)' },
+          { id: 'gmail', label: 'ربط Gmail و Google API' },
+          { id: 'microsoft', label: 'ربط Microsoft 365 و Graph API' },
+          { id: 'smtp', label: 'كلمات مرور التطبيقات (Yahoo / Zoho)' },
+          { id: 'deliverability', label: 'إعدادات الوصول و DNS (SPF / DKIM)' },
         ].map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveGuide(tab.id as any)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors whitespace-nowrap ${
               activeGuide === tab.id
                 ? 'bg-indigo-600 text-white'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
@@ -47,122 +47,114 @@ export function HelpCenterView() {
         ))}
       </div>
 
-      {/* Gmail Guide */}
+      {/* دليل Gmail */}
       {activeGuide === 'gmail' && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4 text-xs leading-relaxed">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-            Configuring Google Cloud Console for Gmail Sending
+            خطوات ربط حساب Google Gmail / Workspace عبر API الرسمي
           </h2>
           <p className="text-slate-600 dark:text-slate-300">
-            PostReach follows least-privilege security. We only request permission to send messages on your behalf (<code>https://www.googleapis.com/auth/gmail.send</code>). We never request broad inbox read access.
+            تطلب المنصة فقط أضيق صلاحية إرسال مخصصة (<code>https://www.googleapis.com/auth/gmail.send</code>) دون طلب أي صلاحيات قراءة لرسائلك الخاصة لحماية خصوصيتك التامة.
           </p>
 
-          <ol className="list-decimal pl-4 space-y-2 text-slate-700 dark:text-slate-300">
+          <ol className="list-decimal pr-4 space-y-2 text-slate-700 dark:text-slate-300">
             <li>
-              Navigate to the <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 underline font-medium">Google Cloud Console</a> and create or select your project.
+              ادخل إلى <a href="https://console.cloud.google.com" target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 font-bold underline">Google Cloud Console</a> وأنشئ مشروعاً جديداً.
             </li>
             <li>
-              Enable the <strong>Gmail API</strong> under <em>APIs &amp; Services → Library</em>.
+              من القائمة الجانبية، اذهب إلى <strong>APIs &amp; Services → Library</strong>، وابحث عن <strong>Gmail API</strong> ثم انقر <strong>Enable (تفعيل)</strong>.
             </li>
             <li>
-              Go to <em>APIs &amp; Services → OAuth consent screen</em>. Configure your app as <strong>External</strong> or <strong>Internal</strong> (for Google Workspace organizations).
+              انتقل إلى <strong>OAuth consent screen (شاشة الموافقة)</strong>، وحدد نوع التطبيق (External أو Internal لمؤسستك).
             </li>
             <li>
-              Under <strong>Scopes</strong>, add: <code>https://www.googleapis.com/auth/gmail.send</code>.
+              في خطوة النطاقات (Scopes)، أضف النطاق: <code dir="ltr">https://www.googleapis.com/auth/gmail.send</code>.
             </li>
             <li>
-              Create OAuth 2.0 Credentials: Under <em>APIs &amp; Services → Credentials</em>, click <strong>Create Credentials → OAuth Client ID</strong>. Select <strong>Web Application</strong>.
+              اذهب إلى <strong>Credentials (بيانات الاعتماد)</strong>، وانقر <strong>Create Credentials → OAuth Client ID</strong> واختر <strong>Web Application</strong>.
             </li>
             <li>
-              Set the <strong>Authorized JavaScript Origins</strong> to your application URL, and click <strong>Create</strong>.
+              انسخ معرف العميل (Client ID) والسر (Client Secret) أو استخدم تسجيل الدخول المباشر في المنصة.
             </li>
           </ol>
-
-          <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded-lg text-amber-800 dark:text-amber-300">
-            <strong>Critical Distinction:</strong> Google Sign-In into PostReach is solely for authenticating your user identity. Connecting a Gmail sender account is an independent consent step inside <em>Email Accounts → Connect Gmail</em>.
-          </div>
         </div>
       )}
 
-      {/* Microsoft Guide */}
+      {/* دليل Microsoft */}
       {activeGuide === 'microsoft' && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4 text-xs leading-relaxed">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-            Configuring Microsoft Azure &amp; Microsoft 365 Graph API
+            خطوات ربط Microsoft 365 و Outlook عبر Microsoft Graph API
           </h2>
 
-          <ol className="list-decimal pl-4 space-y-2 text-slate-700 dark:text-slate-300">
+          <ol className="list-decimal pr-4 space-y-2 text-slate-700 dark:text-slate-300">
             <li>
-              Log into the <a href="https://portal.azure.com" target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 underline font-medium">Microsoft Azure Portal</a> and open <strong>Microsoft Entra ID</strong> (formerly Azure AD).
+              ادخل إلى <a href="https://portal.azure.com" target="_blank" rel="noreferrer" className="text-indigo-600 dark:text-indigo-400 font-bold underline">بوابة Microsoft Azure</a> وافتح <strong>Microsoft Entra ID</strong>.
             </li>
             <li>
-              Go to <strong>App registrations → New registration</strong>. Name your app <em>PostReach Outbound</em> and choose <em>Accounts in any organizational directory and personal Microsoft accounts</em>.
+              انتقل إلى <strong>App registrations → New registration</strong> وسم التطبيق باسم <em>PostReach Outbound</em>.
             </li>
             <li>
-              Under <strong>API permissions</strong>, click <em>Add a permission → Microsoft Graph → Delegated permissions</em>. Add <code>Mail.Send</code>.
+              من صفحة التطبيق، ادخل إلى <strong>API permissions</strong> ثم انقر <em>Add a permission → Microsoft Graph → Delegated permissions</em> وأضف إذن <code>Mail.Send</code>.
             </li>
             <li>
-              Under <strong>Authentication</strong>, add a Web platform redirect URI or Single Page App URI matching your application domain.
+              يمكنك ربط الحساب إما عبر إدخال بيانات التطبيق في نموذج API أو تسجيل الدخول الرسمي.
             </li>
           </ol>
         </div>
       )}
 
-      {/* SMTP App Passwords */}
+      {/* دليل كلمات مرور التطبيقات */}
       {activeGuide === 'smtp' && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4 text-xs leading-relaxed">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-            Using App Passwords for Yahoo, Zoho, and 2FA Accounts
+            استخراج كلمات مرور التطبيقات (App Password) لحسابات Yahoo و Zoho
           </h2>
 
           <div className="space-y-3 text-slate-700 dark:text-slate-300">
             <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <span className="font-semibold block text-slate-900 dark:text-white">Yahoo Mail</span>
+              <span className="font-bold block text-slate-900 dark:text-white">بريد Yahoo Mail</span>
               <p className="mt-1">
-                Go to Yahoo Account Security → Generate App Password → Select "Other App" and enter "PostReach". Use host <code>smtp.mail.yahoo.com</code> on port <code>465</code> (SSL).
+                ادخل إلى إعدادات أمان حساب ياهو (Account Security) → انقر على <strong>Generate app password</strong> → اختر Other واكتب PostReach. استخدم الخادم <code>smtp.mail.yahoo.com</code> والمنفذ <code>465</code> (SSL).
               </p>
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <span className="font-semibold block text-slate-900 dark:text-white">Zoho Mail</span>
+              <span className="font-bold block text-slate-900 dark:text-white">بريد Zoho Mail</span>
               <p className="mt-1">
-                Go to Zoho Accounts → Security → Application-Specific Passwords. Use host <code>smtppro.zoho.com</code> on port <code>465</code> (SSL).
+                ادخل إلى حساب Zoho → الأمان (Security) → كلمات المرور الخاصة بالتطبيقات (Application-Specific Passwords). استخدم الخادم <code>smtppro.zoho.com</code> والمنفذ <code>465</code> (SSL).
               </p>
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-              <span className="font-semibold block text-slate-900 dark:text-white">Amazon SES / SendGrid / Postmark</span>
+              <span className="font-bold block text-slate-900 dark:text-white">المزودات السحابية (SendGrid / Mailgun / Amazon SES / Postmark)</span>
               <p className="mt-1">
-                Generate SMTP API credentials from your provider dashboard. Use port <code>587</code> with TLS encryption.
+                أنشئ مفتاح API Key من لوحة تحكم المزود السحابي الخاص بك وضعه في حقل كلمة المرور أو مفتاح API مع المنفذ <code>587</code> وتشفير TLS.
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Deliverability Guide */}
+      {/* دليل قابلية الوصول */}
       {activeGuide === 'deliverability' && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4 text-xs leading-relaxed">
           <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-            Deliverability Checklist: SPF, DKIM, and DMARC
+            قائمة التحقق الذهبية لضمان وصول الرسائل للبريد الوارد (Inbox) وتجنب الـ Spam
           </h2>
 
-          <p className="text-slate-700 dark:text-slate-300">
-            For maximum deliverability into the primary inbox:
-          </p>
-
-          <ul className="list-disc pl-4 space-y-2 text-slate-700 dark:text-slate-300">
+          <ul className="list-disc pr-4 space-y-2 text-slate-700 dark:text-slate-300">
             <li>
-              <strong>SPF (Sender Policy Framework):</strong> Ensure your sending server IP or include statement is present in your domain's TXT record (e.g. <code>v=spf1 include:_spf.google.com ~all</code>).
+              <strong>سجل SPF (Sender Policy Framework):</strong> تأكد من إضافة سجل TXT في إعدادات DNS لنطاقك يعرّف الخوادم المعتمدة لإرسال بريدك (مثل: <code dir="ltr">v=spf1 include:_spf.google.com ~all</code>).
             </li>
             <li>
-              <strong>DKIM (DomainKeys Identified Mail):</strong> Enable cryptographic signing in your mail provider so messages cannot be forged in transit.
+              <strong>توقيع DKIM:</strong> فعّل تشفير DKIM لدى مزود البريد لتوقيع الرسائل رقمياً ومنع التلاعب بها أثناء الإرسال.
             </li>
             <li>
-              <strong>DMARC:</strong> Publish a DMARC policy (e.g. <code>v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com</code>).
+              <strong>سياسة DMARC:</strong> انشر سجل DMARC في نطاقك لإعطاء ثقة قصوى لخوادم الاستقبال مثل Gmail و Yahoo (مثل: <code dir="ltr">v=DMARC1; p=quarantine; rua=mailto:dmarc@yourdomain.com</code>).
             </li>
             <li>
-              <strong>Respect Throttling:</strong> Set a conservative interval (2–5 seconds per message) in the Campaign Wizard to avoid sudden spam filter triggers.
+              <strong>الفاصل الزمني المتوازن (Throttling):</strong> احرص دائماً على ضبط فاصل زمني (من 2 إلى 5 ثوانٍ) في معالج الحملة لتفادي كشف الإرسال المكثف والحفاظ على سمعة النطاق.
             </li>
           </ul>
         </div>
